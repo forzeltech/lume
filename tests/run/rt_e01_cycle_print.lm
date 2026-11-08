@@ -1,0 +1,9 @@
+struct Node { id i64, kids []Node }
+fn main() {
+    var n = Node { id: 1, kids: [] };
+    n.kids.push(n);
+    print(n.kids.len);
+    print(n);
+}
+// expect: 1
+// expect: Node{id: 1, kids: [Node{id: 1, kids: [...]}]}

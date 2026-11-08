@@ -1,0 +1,2 @@
+fn main() { let a i32 = 1; let b i64 = 2; print(a + b); }
+// error: mismatched types for '+': i32 and i64

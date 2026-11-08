@@ -1,0 +1,3 @@
+fn mm() (i64, i64, str) { return 1, 2; }
+fn main() { let _, _, _ = mm(); }
+// error: returns 3 values (i64, i64, str); got 2

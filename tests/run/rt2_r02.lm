@@ -1,0 +1,3 @@
+fn main() { var g [][]str = [[], []]; for (i in 0..3) { for (row in g) { var r = row; r.push(i"t{i}"); } } churn(); print(g); }
+fn churn() { for (i in 0..3000) { let j = i"overwrite-{i}-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; } }
+// expect: [["t0", "t1", "t2"], ["t0", "t1", "t2"]]

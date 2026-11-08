@@ -1,0 +1,64 @@
+import "money.lm";
+
+pub struct Item { sku str, name str, qty i64, price Money }
+pub struct Stock { items []Item }
+
+// private: only this file can call it
+fn find(s Stock, sku str) i64 {
+    for (i, it in s.items) {
+        if (it.sku == sku) { return i; }
+    }
+    return -1;
+}
+
+pub fn empty_stock() Stock { return Stock { items: [] }; }
+
+pub fn add_item(mut s Stock, it Item) error {
+    if (find(s, it.sku) >= 0) { return error(i"duplicate SKU '{it.sku}'"); }
+    if (it.qty < 0) { return error(i"negative quantity for '{it.sku}'"); }
+    s.items.push(it);
+    return nil;
+}
+
+pub fn sell(mut s Stock, sku str, n i64) (Money, error) {
+    let i = find(s, sku);
+    if (i < 0) { return nil, error(i"no such SKU '{sku}'"); }
+    if (s.items[i].qty < n) {
+        return nil, error(i"only {s.items[i].qty} x {s.items[i].name} left, wanted {n}");
+    }
+    s.items[i].qty -= n;
+    return s.items[i].price.times(n), nil;
+}
+
+pub fn value(s Stock) Money {
+    var total = dollars(0, 0);
+    for (it in s.items) { total = total.plus(it.price.times(it.qty)); }
+    return total;
+}
+
+// "sku,name,qty,price" per line
+pub fn parse_stock(text str) (Stock, error) {
+    var s = empty_stock();
+    var start i64 = 0;
+    var line_no i64 = 0;
+    for (i in 0..text.len + 1) {
+        if (i < text.len && text[i] != '\n') { continue; }
+        let line = text[start..i];
+        start = i + 1;
+        line_no += 1;
+        if (line.len == 0) { continue; }
+        var fields []str = [];
+        var fs i64 = 0;
+        for (j in 0..line.len + 1) {
+            if (j == line.len || line[j] == ',') { fields.push(line[fs..j]); fs = j + 1; }
+        }
+        if (fields.len != 4) { return nil, error(i"line {line_no}: expected 4 fields, got {fields.len}"); }
+        var qty i64 = 0;
+        for (k in 0..fields[2].len) { qty = qty * 10 + i64(fields[2][k] - '0'); }
+        let price, perr = parse_money(fields[3]);
+        if (perr != nil) { return nil, error(i"line {line_no}: {perr.msg}"); }
+        let aerr = add_item(mut s, Item { sku: fields[0], name: fields[1], qty: qty, price: price });
+        if (aerr != nil) { return nil, error(i"line {line_no}: {aerr.msg}"); }
+    }
+    return s, nil;
+}

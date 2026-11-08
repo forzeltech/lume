@@ -1,0 +1,4 @@
+fn f() (i64, error) { return 1, nil; }
+fn g() (i64, error) { let x = try f(); return x, nil }
+fn main() {}
+// error: Lume uses Go-style errors

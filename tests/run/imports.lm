@@ -1,0 +1,7 @@
+import "../mathlib.lm.inc";
+fn main() {
+    var s = Stats { count: 0, sum: 0 };
+    for (i in 0..10) { add_sample(mut s, i); }
+    print(s);
+}
+// expect: Stats{count: 10, sum: 45}

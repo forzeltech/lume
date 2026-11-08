@@ -1,0 +1,17 @@
+struct P { a i64, s str }
+fn main() {
+    let s = "héllo";
+    print(s, s.len, s[0], s == "héllo", s != "hello");
+    let t = s + ", " + "world";
+    print(t);
+    print("escapes: \"q\" \\ \{braces\} tab[\t]");
+    let p = P { a: 1, s: "x" };
+    print(i"interp: {p} {[1, 2]} {1.25} {true} {'a'} {p.a + 1}");
+    let e = "";
+    print(e.len, e == "");
+}
+// expect: héllo 6 104 true true
+// expect: héllo, world
+// expect: escapes: "q" \ {braces} tab[	]
+// expect: interp: P{a: 1, s: "x"} [1, 2] 1.25 true 97 2
+// expect: 0 true

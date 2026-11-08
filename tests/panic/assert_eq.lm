@@ -1,0 +1,2 @@
+fn main() { assert_eq(i"a{1}", "a2"); }
+// panic: assert_eq failed: left = "a1", right = "a2"

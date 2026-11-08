@@ -1,0 +1,20 @@
+// Calling C. The .c file is compiled and linked automatically.
+//   run: bin/lume run examples/ffi/main.lm
+
+extern "fastmath.c" {
+    fn c_sqrt(x f64) f64;
+    fn c_crc32(s str) u32;
+    fn c_popcount(x u64) i64;
+}
+
+struct Vec3 { x f64, y f64, z f64 }
+
+fn length(v Vec3) f64 { return c_sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
+
+fn main() {
+    print("length of (2, 3, 6) =", Vec3 { x: 2.0, y: 3.0, z: 6.0 }.length());
+    print("crc32(\"hello world\") =", c_crc32("hello world"));
+    var bits i64 = 0;
+    for (i in 0..1000) { bits += c_popcount(u64(i)); }
+    print("set bits in 0..1000 =", bits);
+}

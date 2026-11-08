@@ -1,0 +1,3 @@
+fn main() { let a = [1, 2, 3]; var i i64 = 3; print(a[i]); }
+// panic: index 3 out of bounds (len 3)
+// panic: index.lm:1

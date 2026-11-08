@@ -1,0 +1,2 @@
+fn main() { print(i"oops {}"); }
+// error: empty interpolation

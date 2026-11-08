@@ -1,0 +1,2 @@
+fn main() { var s i64 = 64; print(1 << s); }
+// panic: shift out of range

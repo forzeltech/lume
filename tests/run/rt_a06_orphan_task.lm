@@ -1,0 +1,23 @@
+fn slow() (i64) {
+    var x i64 = 0;
+    for (i in 0..30000000) { x = (x + i) % 1000003; }
+    return x;
+}
+fn worker() ([]i64) {
+    let s = spawn slow();
+    var out []i64 = [1, 2];
+    return out;
+}
+fn main() {
+    region {
+        let t = spawn worker();
+        let r = t.join();
+        print(r);
+    }
+    var junk []str = [];
+    for (i in 0..20000) { junk.push(i"junk-{i}"); }
+    let t2 = spawn slow();
+    print(t2.join(), junk.len);
+}
+// expect: [1, 2]
+// expect: 4095 20000

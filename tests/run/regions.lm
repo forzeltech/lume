@@ -1,0 +1,57 @@
+struct User { id i64, name str }
+
+fn label(u User) (str) { return i"user#{u.id}:{u.name}"; }
+
+fn count_long(names []str) (i64) {
+    var n i64 = 0;
+    for (s in names) {
+        let l = s + "!";            // temporary; region-local
+        if (l.len > 5) { n += 1; }
+    }
+    return n;
+}
+
+fn make_users(n i64) ([]User) {
+    var out []User = [];
+    for (i in 0..n) {
+        out.push(User { id: i, name: i"u{i}" });   // escapes the loop into out
+    }
+    return out;                                    // escapes the function to the caller
+}
+
+fn main() {
+    let users = make_users(4);
+    print(users);
+    var labels []str = [];
+    for (u in users) { labels.push(label(u)); }
+    print(labels);
+    print(count_long(["ab", "abcde", "abcdefg"]));
+
+    // explicit region + keep: copy one result out, free the rest
+    var best = "";
+    region {
+        var scratch []str = [];
+        for (i in 0..100) { scratch.push(i"candidate-{i * 7}"); }
+        best = keep scratch[42];
+    }
+    print(best);
+
+    // accumulate across iterations (escape detected, loop is not a region)
+    var acc = "";
+    for (i in 0..5) { acc = acc + i"{i},"; }
+    print(acc);
+
+    // a steady-state loop: memory must not grow
+    let start = mem_live();
+    for (i in 0..300000) {
+        let t = label(User { id: i, name: "temp" });
+        if (t.len == 0) { print("never"); }
+    }
+    print(mem_live() - start <= 65536);
+}
+// expect: [User{id: 0, name: "u0"}, User{id: 1, name: "u1"}, User{id: 2, name: "u2"}, User{id: 3, name: "u3"}]
+// expect: ["user#0:u0", "user#1:u1", "user#2:u2", "user#3:u3"]
+// expect: 2
+// expect: candidate-294
+// expect: 0,1,2,3,4,
+// expect: true

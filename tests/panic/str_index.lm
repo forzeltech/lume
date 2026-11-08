@@ -1,0 +1,2 @@
+fn main() { let s = "ab"; print(s[5]); }
+// panic: index 5 out of bounds

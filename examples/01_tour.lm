@@ -1,0 +1,104 @@
+// A quick tour of Lume.   run: bin/lume run examples/01_tour.lm
+
+const GREETING = "hello";
+const MAX_ITEMS i64 = 5;
+
+// Structs are plain values. Fields are `name type`.
+struct Point { x f64, y f64 }
+struct Shape { name str, points []Point }
+
+// Return types go in parentheses.
+fn add(a Point, b Point) Point {
+    return Point { x: a.x + b.x, y: a.y + b.y };
+}
+
+// Functions can return several values, Go-style.
+fn min_max(xs []i64) (i64, i64) {
+    var lo = xs[0];
+    var hi = xs[0];
+    for (x in xs) {
+        if (x < lo) { lo = x; }
+        if (x > hi) { hi = x; }
+    }
+    return lo, hi;
+}
+
+// `mut` parameters let a function modify the caller's variable.
+// The caller has to say `mut` too, so it is visible at the call site.
+fn translate(mut s Shape, dx f64) {
+    for (i in 0..s.points.len) {
+        s.points[i].x += dx;
+    }
+}
+
+// Functions are values.
+fn double(x i64) i64 { return x * 2; }
+fn square(x i64) i64 { return x * x; }
+
+fn apply_all(fs []fn(i64) i64, x i64) i64 {
+    var v = x;
+    for (f in fs) { v = f(v); }
+    return v;
+}
+
+// `x.f(a)` is just `f(x, a)`, so any function reads like a method.
+fn area(s Shape) f64 {
+    // shoelace formula
+    var sum = 0.0;
+    let n = s.points.len;
+    for (i in 0..n) {
+        let p = s.points[i];
+        let q = s.points[(i + 1) % n];
+        sum += p.x * q.y - q.x * p.y;
+    }
+    if (sum < 0.0) { sum = -sum; }
+    return sum / 2.0;
+}
+
+fn main() {
+    print(GREETING, "from Lume");
+
+    // let = immutable, var = mutable. Types are inferred or written after the name.
+    let origin = Point { x: 0.0, y: 0.0 };
+    var total i64 = 0;
+    print("origin:", origin, add(origin, Point { x: 1.5, y: -2.0 }));
+
+    // Arrays grow with push; they are bounds-checked.
+    var squares []i64 = [];
+    for (i in 0..MAX_ITEMS) { squares.push(i * i); }
+    for (i, sq in squares) { total += sq * i; }
+    let lo, hi = min_max(squares);
+    print("squares:", squares, "weighted total:", total, "range:", lo, hi);
+
+    // Structs containing arrays, mutated through `mut`.
+    var box = Shape {
+        name: "box",
+        points: [Point { x: 0.0, y: 0.0 }, Point { x: 4.0, y: 0.0 },
+                 Point { x: 4.0, y: 3.0 }, Point { x: 0.0, y: 3.0 }],
+    };
+    translate(mut box, 10.0);
+    print(i"{box.name}: area {box.area()}, first corner {box.points[0]}");
+
+    // Strings are UTF-8 bytes: index gives a u8, slices are zero-copy views.
+    let word = "lighthouse";
+    print(i"{word[0..5]} + {word[5..word.len]}, {word.len} bytes, first byte {word[0]}");
+
+    // Function values.
+    print("apply_all:", apply_all([double, square, double], 3));
+
+    // Integers are sized and never convert implicitly; casts are checked.
+    let small u8 = 200;
+    let wide = i64(small) * 1000;
+    print("widened:", wide, "back to i32:", i32(wide));
+
+    // Overflow panics by default; wrapping is explicit.
+    let wrapped = small +% 100;
+    print("200 +% 100 as u8 =", wrapped);
+
+    // defer runs when the scope exits, in reverse order.
+    {
+        defer print("  ...and this runs last");
+        defer print("  this runs second");
+        print("  this runs first");
+    }
+}

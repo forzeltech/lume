@@ -1,0 +1,2 @@
+fn main() { let x u8 = 256; }
+// error: does not fit in u8

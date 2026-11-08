@@ -1,0 +1,12 @@
+import "util.lm";
+
+pub struct Vec2 { x f64, y f64 }
+pub const ORIGIN_NAME = "origin";
+const SCALE f64 = 2.0;                 // private
+
+struct Cache { hits i64 }              // private struct
+
+fn helper(v Vec2) (f64) { return v.x * SCALE + v.y; }     // private; main file has its own helper()
+
+pub fn weight(v Vec2) (f64) { return helper(v) + util_bonus(); }
+pub fn origin() (Vec2) { return Vec2 { x: 0.0, y: 0.0 }; }

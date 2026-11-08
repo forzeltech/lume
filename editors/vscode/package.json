@@ -1,0 +1,23 @@
+{
+  "name": "lume-language",
+  "displayName": "Lume",
+  "description": "Syntax highlighting for the Lume programming language",
+  "version": "0.1.0",
+  "publisher": "lume",
+  "engines": { "vscode": "^1.60.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [{
+      "id": "lume",
+      "aliases": ["Lume", "lume"],
+      "extensions": [".lm"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "lume",
+      "scopeName": "source.lume",
+      "path": "./syntaxes/lume.tmLanguage.json",
+      "embeddedLanguages": { "meta.embedded.interpolation.lume": "lume" }
+    }]
+  }
+}

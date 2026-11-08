@@ -1,0 +1,13 @@
+import "../mods/geo.lm";
+
+fn helper() (str) { return "main's own helper"; }    // same name as geo's private helper: fine
+
+fn main() {
+    let v = Vec2 { x: 1.0, y: 3.0 };
+    print(weight(v), origin(), ORIGIN_NAME);
+    print(helper());
+    print(v.weight());                                // pub fns work as methods too
+}
+// expect: 5.5 Vec2{x: 0.0, y: 0.0} origin
+// expect: main's own helper
+// expect: 5.5

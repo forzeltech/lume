@@ -1,0 +1,43 @@
+struct Job { id i64, data []i64 }
+
+fn sum_job(j Job) (i64) {
+    var t i64 = 0;
+    for (x in j.data) { t += x; }
+    return t * 1000 + j.id;
+}
+
+fn risky(n i64) (str, error) {
+    if (n % 2 == 1) { return "", error(i"odd job {n}"); }
+    return i"even job {n}", nil;
+}
+
+fn noisy(n i64) { var x i64 = 0; for (i in 0..n) { x += i; } }
+
+fn main() {
+    var data []i64 = [1, 2, 3];
+    let t = spawn sum_job(Job { id: 7, data: data });
+    data.push(100);                 // the task got its own copy; no race
+    print(t.join(), data.len);
+
+    var ts []Task[(str, error)] = [];
+    for (i in 0..6) { ts.push(spawn risky(i)); }
+    for (t2 in ts) {
+        let msg, err = t2.join();
+        if (err != nil) { print("task error:", err.msg); continue; }
+        print(msg);
+    }
+    let bg = spawn noisy(1000);     // never joined explicitly: joined when main's region ends
+    var many []Task[i64] = [];
+    for (i in 0..64) { many.push(spawn sum_job(Job { id: i, data: [i, i] })); }
+    var total i64 = 0;
+    for (m in many) { total += m.join(); }
+    print(total);
+}
+// expect: 6007 4
+// expect: even job 0
+// expect: task error: odd job 1
+// expect: even job 2
+// expect: task error: odd job 3
+// expect: even job 4
+// expect: task error: odd job 5
+// expect: 4034016

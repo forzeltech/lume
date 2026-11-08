@@ -1,0 +1,3 @@
+fn f() (i64, error) { return 1, nil; }
+fn main() { let x, err = f(); print(x); }
+// error: error 'err' is never checked

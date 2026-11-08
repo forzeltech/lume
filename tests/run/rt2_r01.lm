@@ -1,0 +1,5 @@
+struct H { items []str }
+fn get(h H) ([]str) { return h.items; }
+fn main() { var h = H { items: [] }; for (i in 0..3) { var b = get(h); b.push(i"t{i}"); } churn(); print(h); }
+fn churn() { for (i in 0..3000) { let j = i"overwrite-{i}-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; } }
+// expect: H{items: ["t0", "t1", "t2"]}

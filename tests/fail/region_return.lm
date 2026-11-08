@@ -1,0 +1,9 @@
+fn f() (str) {
+    region {
+        let s = i"a{1}";
+        return s;
+    }
+    return "";
+}
+fn main() { print(f()); }
+// error: returned value escapes

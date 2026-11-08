@@ -1,0 +1,3 @@
+import "../mods/geo.lm";
+fn main() { print(shout("hi")); }
+// error: unknown function 'shout'

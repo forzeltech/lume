@@ -1,0 +1,197 @@
+// A small expression language: tokenizer -> recursive-descent parser -> tree -> evaluator.
+//   run: bin/lume run examples/05_interpreter.lm
+//
+// Shows: trees without pointers (nodes refer to each other by index into an
+// array), a dispatch table of function values, multiple returns, and error
+// propagation through deep recursion.
+
+struct Tok { kind u8, num i64, text str }               // kind: 'n' number, 'i' identifier, or an operator byte
+struct Node { op u8, num i64, name str, left i64, right i64 }
+struct Parser { toks []Tok, pos i64, nodes []Node }
+struct Var { name str, value i64 }
+
+// ---- operators: a dispatch table indexed by operator byte -------------------
+
+fn op_add(a i64, b i64) (i64, error) { return a + b, nil; }
+fn op_sub(a i64, b i64) (i64, error) { return a - b, nil; }
+fn op_mul(a i64, b i64) (i64, error) { return a * b, nil; }
+fn op_div(a i64, b i64) (i64, error) {
+    if (b == 0) { return 0, error("division by zero"); }
+    return a / b, nil;
+}
+fn op_mod(a i64, b i64) (i64, error) {
+    if (b == 0) { return 0, error("modulo by zero"); }
+    return a % b, nil;
+}
+fn op_bad(a i64, b i64) (i64, error) { return 0, error("unknown operator"); }
+
+fn make_ops() ([]fn(i64, i64) (i64, error)) {
+    var ops []fn(i64, i64) (i64, error) = [];
+    for (i in 0..128) { ops.push(op_bad); }
+    ops['+'] = op_add;
+    ops['-'] = op_sub;
+    ops['*'] = op_mul;
+    ops['/'] = op_div;
+    ops['%'] = op_mod;
+    return ops;
+}
+
+// ---- tokenizer ----------------------------------------------------------------
+
+fn is_digit(c u8) bool { return c >= '0' && c <= '9'; }
+fn is_alpha(c u8) bool { return (c >= 'a' && c <= 'z') || c == '_'; }
+
+fn tokenize(src str) ([]Tok, error) {
+    var out []Tok = [];
+    var i i64 = 0;
+    while (i < src.len) {
+        let c = src[i];
+        if (c == ' ') { i += 1; continue; }
+        if (is_digit(c)) {
+            var v i64 = 0;
+            while (i < src.len && is_digit(src[i])) {
+                v = v * 10 + i64(src[i] - '0');
+                i += 1;
+            }
+            out.push(Tok { kind: 'n', num: v, text: "" });
+            continue;
+        }
+        if (is_alpha(c)) {
+            let start = i;
+            while (i < src.len && is_alpha(src[i])) { i += 1; }
+            out.push(Tok { kind: 'i', num: 0, text: src[start..i] });
+            continue;
+        }
+        if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '(' || c == ')' || c == '=' || c == ';') {
+            out.push(Tok { kind: c, num: 0, text: "" });
+            i += 1;
+            continue;
+        }
+        return nil, error(i"unexpected '{src[i..i + 1]}' at column {i + 1}");
+    }
+    out.push(Tok { kind: 0, num: 0, text: "" });
+    return out, nil;
+}
+
+// ---- parser: builds nodes into p.nodes and returns the index of the root -------
+
+fn peek(p Parser) u8 { return p.toks[p.pos].kind; }
+
+fn add_node(mut p Parser, n Node) i64 {
+    p.nodes.push(n);
+    return p.nodes.len - 1;
+}
+
+fn leaf(op u8, num i64, name str) Node {
+    return Node { op: op, num: num, name: name, left: -1, right: -1 };
+}
+
+fn primary(mut p Parser) (i64, error) {
+    let t = p.toks[p.pos];
+    p.pos += 1;
+    if (t.kind == 'n') { return add_node(mut p, leaf('n', t.num, "")), nil; }
+    if (t.kind == 'i') { return add_node(mut p, leaf('v', 0, t.text)), nil; }
+    if (t.kind == '-') {
+        let inner, err = primary(mut p);
+        if (err != nil) { return 0, err; }
+        let zero = add_node(mut p, leaf('n', 0, ""));
+        return add_node(mut p, Node { op: '-', num: 0, name: "", left: zero, right: inner }), nil;
+    }
+    if (t.kind == '(') {
+        let inner, err = sum(mut p);
+        if (err != nil) { return 0, err; }
+        if (peek(p) != ')') { return 0, error("expected ')'"); }
+        p.pos += 1;
+        return inner, nil;
+    }
+    return 0, error("expected a number, name or '('");
+}
+
+// both binary precedence levels share this helper; `tighter` picks what the operands are
+fn binary(mut p Parser, a u8, b u8, c u8, tighter bool) (i64, error) {
+    var lhs i64 = 0;
+    var err error = nil;
+    if (tighter) { lhs, err = primary(mut p); } else { lhs, err = product(mut p); }
+    if (err != nil) { return 0, err; }
+    while (peek(p) == a || peek(p) == b || peek(p) == c) {
+        let op = peek(p);
+        p.pos += 1;
+        var rhs i64 = 0;
+        if (tighter) { rhs, err = primary(mut p); } else { rhs, err = product(mut p); }
+        if (err != nil) { return 0, err; }
+        lhs = add_node(mut p, Node { op: op, num: 0, name: "", left: lhs, right: rhs });
+    }
+    return lhs, nil;
+}
+
+fn product(mut p Parser) (i64, error) { return binary(mut p, '*', '/', '%', true); }
+fn sum(mut p Parser) (i64, error) { return binary(mut p, '+', '-', '+', false); }
+
+// ---- evaluator --------------------------------------------------------------------
+
+fn lookup(env []Var, name str) (i64, error) {
+    var i = env.len - 1;
+    while (i >= 0) {
+        if (env[i].name == name) { return env[i].value, nil; }
+        i -= 1;
+    }
+    return 0, error(i"undefined variable '{name}'");
+}
+
+fn eval(nodes []Node, env []Var, ops []fn(i64, i64) (i64, error), i i64) (i64, error) {
+    let n = nodes[i];
+    if (n.op == 'n') { return n.num, nil; }
+    if (n.op == 'v') { return lookup(env, n.name); }
+    let a, aerr = eval(nodes, env, ops, n.left);
+    if (aerr != nil) { return 0, aerr; }
+    let b, berr = eval(nodes, env, ops, n.right);
+    if (berr != nil) { return 0, berr; }
+    let f = ops[n.op];
+    return f(a, b);
+}
+
+// program := (name '=' expr ';')* expr
+fn run(src str, ops []fn(i64, i64) (i64, error)) (i64, i64, error) {
+    let toks, err = tokenize(src);
+    if (err != nil) { return 0, 0, err; }
+    var p = Parser { toks: toks, pos: 0, nodes: [] };
+    var env []Var = [];
+    while (peek(p) == 'i' && p.toks[p.pos + 1].kind == '=') {
+        let name = p.toks[p.pos].text;
+        p.pos += 2;
+        let root, perr = sum(mut p);
+        if (perr != nil) { return 0, 0, perr; }
+        if (peek(p) != ';') { return 0, 0, error(i"expected ';' after '{name} = ...'"); }
+        p.pos += 1;
+        let v, verr = eval(p.nodes, env, ops, root);
+        if (verr != nil) { return 0, 0, verr; }
+        env.push(Var { name: name, value: v });
+    }
+    let root, perr = sum(mut p);
+    if (perr != nil) { return 0, 0, perr; }
+    if (peek(p) != 0) { return 0, 0, error("unexpected input after the expression"); }
+    let v, verr = eval(p.nodes, env, ops, root);
+    return v, p.nodes.len, verr;
+}
+
+fn main() {
+    let ops = make_ops();
+    let programs = [
+        "1 + 2 * 3",
+        "(1 + 2) * 3",
+        "width = 6; height = width * 7; height - -width",
+        "x = 17; x % 5 + x / 5",
+        "a = 10; a / (a - 10)",
+        "speed * 2",
+        "3 $ 4",
+        "(1 + 2",
+    ];
+    for (src in programs) {
+        let v, nodes, err = run(src, ops);
+        if (err != nil) {
+            print(i"{src}\n    error: {err}");
+            continue;
+        }
+        print(i"{src}\n    = {v}   ({nodes} tree nodes)");
+    }
+}

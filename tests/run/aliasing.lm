@@ -1,0 +1,29 @@
+// Values that alias outer containers must be treated as outer.
+struct Box { items []str }
+fn id(a []str) ([]str) { return a; }
+fn first(g [][]str) ([]str) { return g[0]; }
+fn churn() { for (i in 0..2000) { let junk = i"overwrite-{i}-xxxxxxxxxxxxxxxxxxxxxxxx"; } }
+
+fn main() {
+    var names []str = [];
+    for (i in 0..3) { var b = names; b.push(i"a{i}"); }                     // direct alias
+    for (i in 0..2) { var b = id(names); b.push(i"b{i}"); }                  // alias through a call
+    var grid [][]str = [[]];
+    for (i in 0..2) { var row = first(grid); row.push(i"c{i}"); }            // alias through nested array
+    for (i in 0..2) { var bx = Box { items: names }; bx.items.push(i"d{i}"); } // alias through a struct field
+    var holder [][]str = [];
+    for (i in 0..2) {
+        var tmp [][]str = [];
+        tmp.push(names);                // tmp now contains an alias to names
+        tmp[0].push(i"e{i}");
+    }
+    var g2 [][]str = [[]];
+    for (i in 0..2) { var r = g2.pop(); r.push(i"f{i}"); g2.push(r); }
+    churn();
+    print(names);
+    print(grid);
+    print(g2);
+}
+// expect: ["a0", "a1", "a2", "b0", "b1", "d0", "d1", "e0", "e1"]
+// expect: [["c0", "c1"]]
+// expect: [["f0", "f1"]]

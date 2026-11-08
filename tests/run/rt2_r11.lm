@@ -1,0 +1,4 @@
+struct N { kids [][]str }
+fn main() { var names []str = []; for (i in 0..3) { var n = N { kids: [names] }; let k = n.kids; var z = k[0]; z.push(i"t{i}"); } churn(); print(names); }
+fn churn() { for (i in 0..3000) { let j = i"overwrite-{i}-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; } }
+// expect: ["t0", "t1", "t2"]

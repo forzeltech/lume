@@ -1,0 +1,3 @@
+fn f() !i64 { return 1 }
+fn main() {}
+// error: error unions are written Go-style

@@ -1,0 +1,21 @@
+fn double(x i64) (i64) { return x * 2; }
+fn square(x i64) (i64) { return x * x; }
+fn apply(xs []i64, f fn(i64) (i64)) ([]i64) {
+    var out []i64 = [];
+    for (x in xs) { out.push(f(x)); }
+    return out;
+}
+fn compose_all(fs []fn(i64) (i64), x i64) (i64) {
+    var v = x;
+    for (f in fs) { v = f(v); }
+    return v;
+}
+fn main() {
+    print(apply([1, 2, 3], double), apply([1, 2, 3], square));
+    print(compose_all([double, square, double], 3));
+    let f = square;
+    print(f(9), [1, 2, 3].apply(double));
+}
+// expect: [2, 4, 6] [1, 4, 9]
+// expect: 72
+// expect: 81 [2, 4, 6]

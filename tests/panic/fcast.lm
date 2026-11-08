@@ -1,0 +1,2 @@
+fn main() { let f = 1e30; print(i32(f)); }
+// panic: float to i32 conversion out of range

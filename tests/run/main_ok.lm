@@ -1,0 +1,8 @@
+fn main() (error) {
+    print("args:", argc() >= 1);
+    let t0 = now_ns();
+    print(now_ns() >= t0);
+    return nil;
+}
+// expect: args: true
+// expect: true

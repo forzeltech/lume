@@ -1,0 +1,15 @@
+fn main() {
+    let age = 41;
+    let i = 3;
+    print(i"age: {age}, next: {age + 1}");
+    print("literal braces: {age} {}");
+    print(i"escaped: \{age\} = {age}");
+    print(i, i"{i}");
+    let xi = "x";
+    print(xi);
+}
+// expect: age: 41, next: 42
+// expect: literal braces: {age} {}
+// expect: escaped: {age} = 41
+// expect: 3 3
+// expect: x

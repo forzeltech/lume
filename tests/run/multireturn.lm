@@ -1,0 +1,88 @@
+struct Stats { name str, hits []i64 }
+
+fn min_max(xs []i64) (i64, i64) {
+    var lo = xs[0];
+    var hi = xs[0];
+    for (x in xs) {
+        if (x < lo) { lo = x; }
+        if (x > hi) { hi = x; }
+    }
+    return lo, hi;
+}
+
+fn div_mod(a i64, b i64) (i64, i64, error) {
+    if (b == 0) { return 0, 0, error("division by zero"); }
+    return a / b, a % b, nil;
+}
+
+fn split_once(s str, sep u8) (str, str, bool) {
+    for (i in 0..s.len) {
+        if (s[i] == sep) { return s[0..i], s[i + 1..s.len], true; }
+    }
+    return s, "", false;
+}
+
+fn named(n i64) (str, Stats) {
+    var hits []i64 = [];
+    for (i in 0..n) { hits.push(i * i); }
+    return i"stats-{n}", Stats { name: i"s{n}", hits: hits };
+}
+
+fn swap(a str, b str) (str, str) { return b, a; }
+fn through(xs []i64) (i64, i64) { return min_max(xs); }
+fn checked(a i64, b i64) (i64, i64, error) {
+    let q, r, err = div_mod(a, b);
+    if (err != nil) { return 0, 0, err; }
+    return q, r, nil;
+}
+fn err_middle(ok bool) (i64, error, str) {
+    if (!ok) { return -1, error("bad"), "fallback"; }
+    return 1, nil, "fine";
+}
+
+fn main() {
+    let lo, hi = min_max([5, -2, 9, 3]);
+    print(lo, hi);
+    let q, r, err = div_mod(17, 5);
+    print(q, r, err);
+    let _, _, e2 = div_mod(1, 0);
+    print(e2);
+    let k, v, found = split_once("key=value", '=');
+    print(k, v, found);
+    let k2, _, found2 = split_once("novalue", '=');
+    print(k2, found2);
+    let label, st = named(4);
+    print(label, st);
+    var a = "left";
+    var b = "right";
+    a, b = swap(a, b);
+    print(a, b);
+    let l2, h2 = through([3, 1, 2]);
+    print(l2, h2);
+    let q3, r3, e3 = checked(9, 0);
+    print(q3, r3, e3);
+    let n, e4, note = err_middle(false);
+    if (e4 != nil) { print(n, e4, note); }
+    let t = spawn named(3);
+    let tl, ts = t.join();
+    print(tl, ts.hits);
+    var total i64 = 0;
+    for (i in 0..1000) {
+        let x, y = min_max([i, i * 2, 7]);
+        total += y - x;
+    }
+    print(total);
+    min_max([1]);           // no error among the results: discarding is allowed, like Go
+}
+// expect: -2 9
+// expect: 3 2 <nil>
+// expect: division by zero
+// expect: key value true
+// expect: novalue false
+// expect: stats-4 Stats{name: "s4", hits: [0, 1, 4, 9]}
+// expect: right left
+// expect: 1 3
+// expect: 0 0 division by zero
+// expect: -1 bad fallback
+// expect: stats-3 [0, 1, 4]
+// expect: 992044

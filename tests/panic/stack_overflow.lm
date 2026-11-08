@@ -1,0 +1,4 @@
+fn down(n i64) (i64) { return down(n + 1) + 1; }
+fn main() { print(down(0)); }
+// panic: stack overflow
+// nosan: the sanitizer reports stack overflow itself

@@ -1,0 +1,2 @@
+pub fn util_bonus() (f64) { return 0.5; }
+pub fn shout(s str) (str) { return s + "!"; }

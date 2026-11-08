@@ -1,0 +1,2 @@
+fn main() { for i in 0..3 { } }
+// error: `for` needs parentheses

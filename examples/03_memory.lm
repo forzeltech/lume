@@ -1,0 +1,63 @@
+// Memory without a garbage collector, a borrow checker, or free().
+//   run: bin/lume run examples/03_memory.lm
+//
+// Every function body and loop body is a candidate *region* (arena). If nothing
+// allocated inside it escapes, it gets its own arena that is freed in O(1) when
+// the scope ends. If something escapes, the compiler notices and allocates it in
+// the enclosing region instead. You never annotate lifetimes.
+
+struct Request { id i64, path str, headers []str }
+struct Response { status i64, body str }
+
+// Builds plenty of temporary strings, but only a Response leaves.
+fn handle(r Request) Response {
+    var parts []str = [];
+    for (h in r.headers) { parts.push("[" + h + "]"); }
+    let page = i"GET {r.path} with {parts.len} headers";
+    if (r.path == "/missing") { return Response { status: 404, body: "not found" }; }
+    return Response { status: 200, body: page };      // `page` escapes: kept in the caller's region
+}
+
+fn make_request(i i64) Request {
+    var hs []str = [];
+    for (k in 0..8) { hs.push(i"x-header-{k}: value-{i}"); }
+    return Request { id: i, path: i"/users/{i}", headers: hs };
+}
+
+fn kib(n i64) str { return i"{n / 1024} KiB"; }
+
+fn main() {
+    // 1. A request loop: each iteration's temporaries are freed when it ends.
+    let before = mem_live();
+    var ok i64 = 0;
+    for (i in 0..200000) {
+        let resp = handle(make_request(i));
+        if (resp.status == 200) { ok += 1; }
+    }
+    print(i"handled {ok} requests; memory held afterwards: {kib(mem_live() - before)}");
+
+    // 2. Values that escape are kept alive automatically.
+    var log []str = [];
+    for (i in 0..3) {
+        let resp = handle(make_request(i));
+        log.push(resp.body);               // escapes into `log`, so this loop shares main's region
+    }
+    print("kept:", log);
+
+    // 3. An explicit region: escaping from it is a compile error, copy out with `keep`.
+    var best = "";
+    region {
+        var candidates []str = [];
+        for (i in 0..1000) { candidates.push(i"candidate-{i * 37 % 1000}"); }
+        best = keep candidates[999];       // without `keep`, this line does not compile
+    }                                      // all 1000 candidates freed here
+    print("best:", best);
+
+    // 4. Aliasing is tracked: `b` refers to `log`, so pushing through it is safe
+    //    (the loop falls back to the enclosing region).
+    for (i in 0..2) {
+        var b = log;
+        b.push(i"added through an alias #{i}");
+    }
+    print(i"log now has {log.len} entries; last = {log[log.len - 1]}");
+}

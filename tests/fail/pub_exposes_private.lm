@@ -1,0 +1,4 @@
+struct Secret { v i64 }
+pub fn leak() (Secret) { return Secret { v: 1 }; }
+fn main() {}
+// error: uses struct 'Secret', which is not `pub`

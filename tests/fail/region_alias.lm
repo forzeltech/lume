@@ -1,0 +1,8 @@
+fn main() {
+    var names []str = [];
+    region {
+        var b = names;
+        b.push(i"tmp{1}");
+    }
+}
+// error: pushing into 'b'

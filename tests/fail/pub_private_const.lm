@@ -1,0 +1,3 @@
+import "../mods/geo.lm";
+fn main() { print(SCALE); }
+// error: unknown name 'SCALE'

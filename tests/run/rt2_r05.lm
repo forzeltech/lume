@@ -1,0 +1,4 @@
+fn link(mut a [][]str, b []str) { a.push(b); }
+fn main() { var names []str = []; for (i in 0..3) { var tmp [][]str = []; link(mut tmp, names); tmp[0].push(i"t{i}"); } churn(); print(names); }
+fn churn() { for (i in 0..3000) { let j = i"overwrite-{i}-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; } }
+// expect: ["t0", "t1", "t2"]

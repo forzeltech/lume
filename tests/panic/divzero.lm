@@ -1,0 +1,2 @@
+fn main() { var z i64 = 0; print(10 / z); }
+// panic: division by zero

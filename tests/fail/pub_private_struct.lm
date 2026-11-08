@@ -1,0 +1,3 @@
+import "../mods/geo.lm";
+fn main() { let c = Cache { hits: 1 }; }
+// error: struct 'Cache' is not `pub`

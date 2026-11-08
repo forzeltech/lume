@@ -1,0 +1,3 @@
+fn f() (i64, error) { return 1; }
+fn main() { let _, _ = f(); }
+// error: return both

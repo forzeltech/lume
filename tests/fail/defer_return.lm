@@ -1,0 +1,2 @@
+fn main() { defer { return; } }
+// error: not allowed inside defer

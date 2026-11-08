@@ -1,0 +1,6 @@
+fn two() (str, str) { return i"a{1}", i"b{2}"; }
+fn main() {
+    var keepme = "";
+    region { let x, y = two(); keepme = y; }
+}
+// error: inner region

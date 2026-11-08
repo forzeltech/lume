@@ -1,0 +1,50 @@
+// Money stored as integer cents: no floating-point rounding surprises.
+
+pub struct Money { cents i64 }
+
+pub const ZERO_LABEL = "$0.00";
+
+// private helper: not visible to files that import this one
+fn pad2(n i64) str {
+    if (n < 10) { return i"0{n}"; }
+    return i"{n}";
+}
+
+pub fn dollars(d i64, c i64) Money { return Money { cents: d * 100 + c }; }
+
+pub fn plus(a Money, b Money) Money { return Money { cents: a.cents + b.cents }; }
+
+pub fn times(a Money, n i64) Money { return Money { cents: a.cents * n }; }
+
+pub fn label(m Money) str {
+    if (m.cents == 0) { return ZERO_LABEL; }
+    var sign = "";
+    var c = m.cents;
+    if (c < 0) { sign = "-"; c = -c; }
+    return i"{sign}${c / 100}.{pad2(c % 100)}";
+}
+
+// "12.50" -> Money
+pub fn parse_money(s str) (Money, error) {
+    var whole i64 = 0;
+    var frac i64 = 0;
+    var digits_after i64 = -1;
+    for (i in 0..s.len) {
+        let ch = s[i];
+        if (ch == '.') {
+            if (digits_after >= 0) { return nil, error(i"two decimal points in '{s}'"); }
+            digits_after = 0;
+            continue;
+        }
+        if (ch < '0' || ch > '9') { return nil, error(i"'{s}' is not an amount"); }
+        let d = i64(ch - '0');
+        if (digits_after < 0) { whole = whole * 10 + d; }
+        else {
+            digits_after += 1;
+            if (digits_after > 2) { return nil, error(i"too many decimals in '{s}'"); }
+            frac = frac * 10 + d;
+        }
+    }
+    if (digits_after == 1) { frac *= 10; }
+    return dollars(whole, frac), nil;
+}

@@ -1,0 +1,73 @@
+// Tests live next to the code.
+//   run the tests:  bin/lume test examples/06_testing.lm
+//   only some:      bin/lume test examples/06_testing.lm sort
+
+fn insertion_sort(mut xs []i64) {
+    for (i in 1..xs.len) {
+        var j = i;
+        while (j > 0 && xs[j - 1] > xs[j]) {
+            let t = xs[j];
+            xs[j] = xs[j - 1];
+            xs[j - 1] = t;
+            j -= 1;
+        }
+    }
+}
+
+fn gcd(a i64, b i64) i64 {
+    if (b == 0) { return a; }
+    return gcd(b, a % b);
+}
+
+fn parse_hex(s str) (u64, error) {
+    if (s.len == 0) { return 0, error("empty"); }
+    var v u64 = 0;
+    for (i in 0..s.len) {
+        let c = s[i];
+        var d u64 = 0;
+        if (c >= '0' && c <= '9') { d = u64(c - '0'); }
+        else if (c >= 'a' && c <= 'f') { d = u64(c - 'a') + 10; }
+        else { return 0, error(i"bad hex digit '{s[i..i + 1]}'"); }
+        if (v > 0x0fffffffffffffff) { return 0, error("overflow"); }
+        v = v * 16 + d;
+    }
+    return v, nil;
+}
+
+fn main() {
+    var xs = [5, 3, 9, 1];
+    insertion_sort(mut xs);
+    print(xs, gcd(84, 36));
+}
+
+test "sort orders numbers" {
+    var xs = [5, -1, 3, 3, 0];
+    insertion_sort(mut xs);
+    assert_eq(xs, [-1, 0, 3, 3, 5]);
+}
+
+test "sort handles empty and single" {
+    var none []i64 = [];
+    insertion_sort(mut none);
+    assert_eq(none.len, 0);
+    var one = [7];
+    insertion_sort(mut one);
+    assert_eq(one, [7]);
+}
+
+test "gcd" {
+    assert_eq(gcd(84, 36), 12);
+    assert_eq(gcd(17, 5), 1);
+}
+
+test "hex parsing" {
+    let v, err = parse_hex("ff10");
+    if (err != nil) { return err; }          // returning an error fails the test
+    assert_eq(v, 65296);
+}
+
+test "hex errors carry messages" {
+    let _, err = parse_hex("12g");
+    assert(err != nil);
+    assert_eq(err.msg, "bad hex digit 'g'");
+}

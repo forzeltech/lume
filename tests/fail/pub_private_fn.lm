@@ -1,0 +1,3 @@
+import "../mods/geo.lm";
+fn main() { let v = origin(); print(helper(v)); }
+// error: unknown function 'helper'

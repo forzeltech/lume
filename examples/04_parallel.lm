@@ -1,0 +1,92 @@
+// Threads without data races.
+//   run: bin/lume run examples/04_parallel.lm [threads]
+//
+// `spawn f(args)` runs f on a new OS thread with its own arena. Arguments are
+// deep-copied in, so the thread can never touch its parent's memory.
+// `join()` hands the thread's whole arena back: the result is not copied.
+// A task cannot outlive the region that spawned it (structured concurrency).
+
+struct Range { lo i64, hi i64 }
+struct Report { primes i64, largest i64, twins []i64 }
+
+fn is_prime(n i64) bool {
+    if (n < 2) { return false; }
+    if (n % 2 == 0) { return n == 2; }
+    var d i64 = 3;
+    while (d * d <= n) {
+        if (n % d == 0) { return false; }
+        d += 2;
+    }
+    return true;
+}
+
+// Runs on its own thread. Returns a struct holding an array: it comes back by arena hand-off.
+fn scan(ranges []Range) Report {
+    var r = Report { primes: 0, largest: 0, twins: [] };
+    for (rg in ranges) {
+        for (n in rg.lo..rg.hi) {
+            if (is_prime(n)) {
+                r.primes += 1;
+                if (n > r.largest) { r.largest = n; }
+                if (is_prime(n + 2)) { r.twins.push(n); }
+            }
+        }
+    }
+    return r;
+}
+
+// Tasks can fail like any function: (T, error) comes back through join().
+fn checked_sqrt(n i64) (i64, error) {
+    if (n < 0) { return 0, error(i"cannot take the square root of {n}"); }
+    var x i64 = 0;
+    while ((x + 1) * (x + 1) <= n) { x += 1; }
+    return x, nil;
+}
+
+fn background_noise(n i64) {
+    var x i64 = 0;
+    for (i in 0..n) { x = (x + i) % 7919; }
+}
+
+fn main() {
+    var threads i64 = 4;
+    if (argc() > 1) { threads = i64(arg(1)[0] - '0'); }
+    let limit i64 = 2000000;
+    let chunks i64 = 64;
+    let size = limit / chunks;
+
+    // deal chunks round-robin so every thread gets a fair share
+    var plan [][]Range = [];
+    for (t in 0..threads) { plan.push([]); }
+    for (c in 0..chunks) { plan[c % threads].push(Range { lo: c * size, hi: (c + 1) * size }); }
+
+    let t0 = now_ns();
+    var tasks []Task[Report] = [];
+    for (t in 0..threads) { tasks.push(spawn scan(plan[t])); }
+    var primes i64 = 0;
+    var largest i64 = 0;
+    var twins i64 = 0;
+    for (t in tasks) {
+        let r = t.join();
+        primes += r.primes;
+        twins += r.twins.len;
+        if (r.largest > largest) { largest = r.largest; }
+    }
+    let ms = (now_ns() - t0) / 1000000;
+    print(i"{primes} primes below {limit} ({twins} twin pairs, largest {largest}) using {threads} threads in {ms} ms");
+
+    // the parent changing its data after spawning never affects the child
+    var data []i64 = [16, 81, -4, 144];
+    var roots []Task[(i64, error)] = [];
+    for (x in data) { roots.push(spawn checked_sqrt(x)); }
+    data.push(1000000);                  // the tasks have their own copies
+    for (i, t in roots) {
+        let v, err = t.join();
+        if (err != nil) { print(i"  task {i} failed: {err}"); continue; }
+        print(i"  sqrt({data[i]}) = {v}");
+    }
+
+    // never joined explicitly: joined automatically when main's region ends
+    let bg = spawn background_noise(1000);
+    print("done");
+}

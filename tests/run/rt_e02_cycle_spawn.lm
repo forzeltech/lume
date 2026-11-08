@@ -1,0 +1,9 @@
+struct Node { id i64, kids []Node }
+fn count(n Node) (i64) { return n.kids.len; }
+fn main() {
+    var n = Node { id: 1, kids: [] };
+    n.kids.push(n);
+    let t = spawn count(n);
+    print(t.join());
+}
+// expect: 1

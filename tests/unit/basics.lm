@@ -1,0 +1,7 @@
+fn fib(n i64) (i64) { if (n < 2) { return n; } return fib(n - 1) + fib(n - 2); }
+fn half(n i64) (i64, error) { if (n % 2 != 0) { return 0, error("odd"); } return n / 2, nil; }
+
+test "fib" { assert_eq(fib(20), 6765); }
+test "errors fail tests" { let h, err = half(10); if (err != nil) { return err; } assert_eq(h, 5); }
+test "error values" { let h, err = half(3); assert(err != nil); assert_eq(err.msg, "odd"); assert_eq(h, 0); }
+test "arrays" { var a = [3, 1, 2]; a.push(4); assert_eq(a, [3, 1, 2, 4]); }

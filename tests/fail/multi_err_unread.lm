@@ -1,0 +1,3 @@
+fn dm() (i64, i64, error) { return 1, 2, nil; }
+fn main() { let q, r, err = dm(); print(q, r); }
+// error: error 'err' is never checked

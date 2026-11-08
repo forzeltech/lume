@@ -1,0 +1,11 @@
+struct S { ts []Task[i64] }
+fn w(x i64) (i64) { return x; }
+fn sum(s S) (i64) { var t i64 = 0; for (x in s.ts) { t += x.join(); } return t; }
+fn main() {
+    var ts []Task[i64] = [];
+    ts.push(spawn w(1));
+    let s = S { ts: ts };
+    let t = spawn sum(s);
+    print(t.join());
+}
+// error: tasks cannot be sent

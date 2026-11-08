@@ -1,0 +1,9 @@
+fn main() {
+    var keepme = "";
+    region {
+        let tmp = i"built-{1}";
+        keepme = tmp;
+    }
+    print(keepme);
+}
+// error: inner region

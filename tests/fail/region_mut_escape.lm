@@ -1,0 +1,6 @@
+fn add(mut xs []str, i i64) { xs.push(i"item{i}"); }
+fn main() {
+    var out []str = [];
+    region { add(mut out, 1); }
+}
+// error: passing as `mut xs`

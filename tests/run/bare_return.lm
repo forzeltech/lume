@@ -1,0 +1,17 @@
+// Single return types may omit the parentheses.
+struct P { x i64 }
+fn sq(x i64) i64 { return x * x; }
+fn wrap(x i64) (i64) { return x + 1; }
+fn names() []str { return ["a", "b"]; }
+fn mk(x i64) P { return P { x: x }; }
+fn check(x i64) error { if (x < 0) { return error("neg"); } return nil; }
+fn pick() fn(i64) i64 { return sq; }
+fn main() {
+    var f fn(i64) i64 = sq;
+    let g = pick();
+    print(sq(4), wrap(4), names(), mk(3), f(5), g(6));
+    let err = check(-1);
+    if (err != nil) { print("err ok"); }
+}
+// expect: 16 5 ["a", "b"] P{x: 3} 25 36
+// expect: err ok

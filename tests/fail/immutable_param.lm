@@ -1,0 +1,3 @@
+fn f(xs []i64) { xs.push(1); }
+fn main() { f([1]); }
+// error: mut xs

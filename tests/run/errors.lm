@@ -1,0 +1,79 @@
+struct Config { port i64, name str, tags []str }
+
+fn digit(c u8) (i64, error) {
+    if (c < '0' || c > '9') { return 0, error(i"bad digit '{c}'"); }
+    return i64(c - '0'), nil;
+}
+
+fn parse_int(s str) (i64, error) {
+    if (s.len == 0) { return 0, error("empty number"); }
+    var n i64 = 0;
+    for (i in 0..s.len) {
+        let d, err = digit(s[i]);
+        if (err != nil) { return 0, err; }
+        n = n * 10 + d;
+    }
+    return n, nil;
+}
+
+fn load(port str, name str) (Config, error) {
+    let p, err = parse_int(port);
+    if (err != nil) { return nil, err; }          // nil = the zero Config
+    if (p > 65535) { return nil, error(i"port {p} out of range"); }
+    return Config { port: p, name: name, tags: [] }, nil;
+}
+
+fn check(port str) (error) {
+    let c, err = load(port, "svc");
+    if (err != nil) { return err; }
+    print("loaded", c);
+    return nil;
+}
+
+fn first_valid(inputs []str) (i64) {
+    for (s in inputs) {
+        let n, err = parse_int(s);
+        if (err != nil) {
+            print("skip:", err);
+            continue;
+        }
+        return n;
+    }
+    return -1;
+}
+
+fn passthrough(s str) (i64, error) { return parse_int(s); }
+
+fn main() (error) {
+    let a, e1 = parse_int("123");
+    let b, e2 = parse_int("12x");
+    print(a, e1, b, e2);
+    let err = check("8080");
+    if (err != nil) { return err; }
+    var e = check("99999");
+    if (e != nil) { print("check failed:", e.msg); }
+    e = check("");
+    if (e != nil) { print("check failed:", e); }
+    print(first_valid(["", "x", "42"]));
+    let z, ez = load("x", "y");
+    if (ez != nil) { print("zero value on error:", z); }
+    let _, _ = passthrough("5");
+    var v i64 = 0;
+    var verr error = nil;
+    v, verr = passthrough("77");
+    print(v, verr);
+    return check("1a");
+}
+// exit: 1
+// expect: 123 <nil> 0 bad digit '120'
+// expect: loaded Config{port: 8080, name: "svc", tags: []}
+// expect: check failed: port 99999 out of range
+// expect: check failed: empty number
+// expect: skip: empty number
+// expect: skip: bad digit '120'
+// expect: 42
+// expect: zero value on error: Config{port: 0, name: "", tags: []}
+// expect: 77 <nil>
+// stderr: error: bad digit '97'
+// stderr: raised at
+// stderr: passed through

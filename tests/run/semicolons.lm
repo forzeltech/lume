@@ -1,0 +1,24 @@
+struct P { x i64, y i64 }
+fn add(a i64,
+       b i64)
+       (i64)
+{
+    return
+        a + b;
+}
+fn main() {
+    let total = add(
+        1,
+        2
+    );
+    let p = P {
+        x: total,
+        y: [10, 20]
+            [1]
+    };
+    print(p); print(total);;
+    var xs []i64 = []; xs.push(1); xs.push(2); print(xs);
+}
+// expect: P{x: 3, y: 20}
+// expect: 3
+// expect: [1, 2]

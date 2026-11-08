@@ -1,0 +1,4 @@
+fn w(xs []str) ([]str) { var o = xs; o.push("w"); return o; }
+fn main() { var names []str = []; for (i in 0..2) { let t = spawn w(names); var r = t.join(); r.push(i"t{i}"); } churn(); print(names); }
+fn churn() { for (i in 0..3000) { let j = i"overwrite-{i}-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; } }
+// expect: []

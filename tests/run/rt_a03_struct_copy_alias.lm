@@ -1,0 +1,10 @@
+struct Bag { items []str }
+fn main() {
+    var bag = Bag { items: [] };
+    for (i in 0..3) {
+        var c = bag;
+        c.items.push(i"x{i}");
+    }
+    print(bag);
+}
+// expect: Bag{items: ["x0", "x1", "x2"]}

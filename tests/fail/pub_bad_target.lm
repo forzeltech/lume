@@ -1,0 +1,3 @@
+pub test "x" { }
+fn main() {}
+// error: `pub` can only mark a fn, struct or const

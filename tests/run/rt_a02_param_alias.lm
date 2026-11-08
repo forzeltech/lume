@@ -1,0 +1,11 @@
+fn add(a []str, n i64) {
+    var b = a;
+    b.push(i"from-callee-{n}");
+}
+fn main() {
+    var a []str = [];
+    add(a, 1);
+    add(a, 2);
+    print(a);
+}
+// expect: ["from-callee-1", "from-callee-2"]

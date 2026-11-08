@@ -1,0 +1,13 @@
+fn big(n i64) ([]u8) { var b []u8 = []; for (i in 0..n) { b.push(u8(i % 200)); } return b; }
+fn main() {
+    let t = spawn big(300000);
+    let u = spawn big(20000);
+    var keepme []str = [];
+    for (i in 0..5000) { keepme.push(i"k{i}"); }
+    let a = t.join();
+    let b = u.join();
+    var a2 = a;
+    for (i in 0..300000) { a2.push(1); }
+    print(a.len, b.len, keepme[4999], a[299999]);
+}
+// expect: 600000 20000 k4999 199

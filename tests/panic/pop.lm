@@ -1,0 +1,2 @@
+fn main() { var a []i64 = []; print(a.pop()); }
+// panic: pop from empty array

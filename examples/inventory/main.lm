@@ -1,0 +1,35 @@
+// A multi-file program. Each file is a module; only `pub` items are visible
+// to files that import it, and imports are not transitive.
+//   run: bin/lume run examples/inventory/main.lm
+
+import "money.lm";      // for label()
+import "stock.lm";
+
+const CSV = "A100,Lantern,12,24.99\nB200,Rope (10m),40,7.50\nC300,Compass,5,15\n";
+
+fn main() error {
+    var s, err = parse_stock(CSV);
+    if (err != nil) { return err; }
+    print(i"stock value: {s.value().label()} across {s.items.len} products");
+
+    let orders = ["A100", "C300", "C300", "Z999"];
+    let counts = [3, 4, 2, 1];
+    var revenue = dollars(0, 0);
+    for (i, sku in orders) {
+        let paid, serr = sell(mut s, sku, counts[i]);
+        if (serr != nil) {
+            print(i"  order {i + 1} refused: {serr}");
+            continue;
+        }
+        revenue = revenue.plus(paid);
+        print(i"  order {i + 1}: {counts[i]} x {sku} for {paid.label()}");
+    }
+    print(i"revenue {revenue.label()}, remaining stock {s.value().label()}");
+
+    // bad input is rejected with a precise message
+    let _, bad = parse_stock("A1,Thing,3,4.999\n");
+    print("bad file:", bad);
+
+    // find() and pad2() are private to their files; calling them here would not compile
+    return nil;
+}

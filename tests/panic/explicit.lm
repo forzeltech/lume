@@ -1,0 +1,2 @@
+fn main() { let n = 3; panic(i"custom {n}"); }
+// panic: custom 3

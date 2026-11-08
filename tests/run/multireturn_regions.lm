@@ -1,0 +1,31 @@
+struct Item { name str, tags []str }
+fn make(i i64) (str, Item) {
+    var tags []str = [];
+    tags.push(i"t{i}");
+    return i"label-{i}", Item { name: i"item-{i}", tags: tags };
+}
+fn churn() { for (i in 0..3000) { let j = i"overwrite-{i}-xxxxxxxxxxxxxxxxxxxxxxxxxx"; } }
+fn main() {
+    var kept []Item = [];
+    var labels []str = [];
+    for (i in 0..3) {
+        let label, it = make(i);      // both escape into outer arrays: loop must not free them
+        kept.push(it);
+        labels.push(label);
+    }
+    var a = "";
+    var b Item = nil;
+    for (i in 0..2) { a, b = make(i + 10); }   // escape via multi-assignment
+    churn();
+    print(labels, kept);
+    print(a, b);
+    let start = mem_live();
+    for (i in 0..200000) {
+        let l, it = make(i);          // temporary: freed every iteration
+        if (l.len + it.tags.len == 0) { print("never"); }
+    }
+    print(mem_live() - start <= 65536);
+}
+// expect: ["label-0", "label-1", "label-2"] [Item{name: "item-0", tags: ["t0"]}, Item{name: "item-1", tags: ["t1"]}, Item{name: "item-2", tags: ["t2"]}]
+// expect: label-11 Item{name: "item-11", tags: ["t11"]}
+// expect: true

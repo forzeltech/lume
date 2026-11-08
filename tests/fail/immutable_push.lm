@@ -1,0 +1,2 @@
+fn main() { let xs = [1, 2]; xs.push(3); }
+// error: declare it with `var`

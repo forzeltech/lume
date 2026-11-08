@@ -1,0 +1,5 @@
+fn main() {
+    var out []str = [];
+    region { out.push(i"x{2}"); }
+}
+// error: pushing into 'out'

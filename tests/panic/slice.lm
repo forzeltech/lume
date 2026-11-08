@@ -1,0 +1,2 @@
+fn main() { let s = "abc"; var n i64 = 4; print(s[1..n]); }
+// panic: string slice out of bounds

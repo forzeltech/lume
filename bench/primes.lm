@@ -1,0 +1,43 @@
+// Count primes below N, split across T threads. Each worker owns its memory;
+// results come back by arena hand-off.
+struct Range { lo i64, hi i64 }
+
+fn is_prime(n i64) bool {
+    if (n < 2) { return false; }
+    if (n % 2 == 0) { return n == 2; }
+    var d i64 = 3;
+    while (d * d <= n) {
+        if (n % d == 0) { return false; }
+        d += 2;
+    }
+    return true;
+}
+
+fn count(r Range) i64 {
+    var c i64 = 0;
+    for (n in r.lo..r.hi) { if (is_prime(n)) { c += 1; } }
+    return c;
+}
+
+fn main() {
+    let n i64 = 6000000;
+    var threads i64 = 1;
+    if (argc() > 1) { threads = i64(arg(1)[0] - '0'); }
+    // interleave chunks so work is balanced
+    let chunks i64 = 64;
+    let size = n / chunks;
+    var tasks []Task[i64] = [];
+    var per_thread [][]Range = [];
+    for (t in 0..threads) { per_thread.push([]); }
+    for (c in 0..chunks) { per_thread[c % threads].push(Range { lo: c * size, hi: (c + 1) * size }); }
+    for (t in 0..threads) { tasks.push(spawn count_all(per_thread[t])); }
+    var total i64 = 0;
+    for (t in tasks) { total += t.join(); }
+    print(i"{total} primes below {n} using {threads} thread(s)");
+}
+
+fn count_all(rs []Range) i64 {
+    var c i64 = 0;
+    for (r in rs) { c += count(r); }
+    return c;
+}

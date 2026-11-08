@@ -1,0 +1,3 @@
+struct P { x: f64 }
+fn main() {}
+// error: struct fields are written `name type`

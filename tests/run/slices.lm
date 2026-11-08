@@ -1,0 +1,11 @@
+fn main() {
+    let s = "hello world";
+    let w = s[6..11];
+    print(w, w.len, s[0..0].len);
+    let a = [1, 2, 3, 4, 5];
+    var b = a[1..4];
+    b.push(99);
+    print(a, b);
+}
+// expect: world 5 0
+// expect: [1, 2, 3, 4, 5] [2, 3, 4, 99]

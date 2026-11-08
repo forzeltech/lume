@@ -1,0 +1,2 @@
+fn main() { var a i64[] = []; }
+// error: array types are written `[]T`

@@ -1,0 +1,42 @@
+fn total(xs []i64) (i64) {
+    var t i64 = 0;
+    for (x in xs) { t += x; }
+    return t;
+}
+fn fill(mut xs []i64, n i64) {
+    for (i in 0..n) { xs.push(i); }
+}
+fn main() {
+    var a []i64 = [];
+    fill(mut a, 5);
+    a[0] = 100;
+    print(a, a.len, total(a));
+    let last = a.pop();
+    print(last, a);
+    var grid [][]i64 = [];
+    for (r in 0..3) {
+        var row []i64 = [];
+        for (c in 0..3) { row.push(r * 3 + c); }
+        grid.push(row);
+    }
+    grid[1][1] = -1;
+    print(grid);
+    for (i, row in grid) { print(i, row.len, row[i]); }
+    print([1, 2, 3] == [1, 2, 3], [1, 2] == [1, 3]);
+    var words = ["a", "b"];
+    words.push("c");
+    words.clear();
+    print(words.len, words);
+    var big []u8 = [];
+    for (i in 0..100000) { big.push(u8(i % 256)); }
+    print(big.len, big[99999]);
+}
+// expect: [100, 1, 2, 3, 4] 5 110
+// expect: 4 [100, 1, 2, 3]
+// expect: [[0, 1, 2], [3, -1, 5], [6, 7, 8]]
+// expect: 0 3 0
+// expect: 1 3 -1
+// expect: 2 3 8
+// expect: true false
+// expect: 0 []
+// expect: 100000 159

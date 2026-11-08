@@ -1,0 +1,2 @@
+fn main() { break; }
+// error: outside of a loop

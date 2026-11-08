@@ -1,0 +1,2 @@
+fn main() { let n: i64 = 1 }
+// error: no colon

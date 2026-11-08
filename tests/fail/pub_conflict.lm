@@ -1,0 +1,4 @@
+import "../mods/util.lm";
+fn shout(s str) (str) { return s; }
+fn main() {}
+// error: conflicts with pub fn 'shout'

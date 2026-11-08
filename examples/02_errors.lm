@@ -1,0 +1,114 @@
+// Go-style error handling, enforced by the compiler.
+// exit: 1   (expected: the last step demonstrates the error trace)
+//   run: bin/lume run examples/02_errors.lm            (uses a built-in config)
+//        bin/lume run examples/02_errors.lm my.conf    (reads a file)
+
+struct Config { name str, port i64, workers i64, debug bool }
+
+fn parse_int(s str) (i64, error) {
+    if (s.len == 0) { return 0, error("expected a number, got nothing"); }
+    var n i64 = 0;
+    for (i in 0..s.len) {
+        let c = s[i];
+        if (c < '0' || c > '9') {
+            return 0, error(i"'{s}' is not a number");
+        }
+        n = n * 10 + i64(c - '0');
+    }
+    return n, nil;
+}
+
+fn trim(s str) str {
+    var a i64 = 0;
+    var b = s.len;
+    while (a < b && (s[a] == ' ' || s[a] == '\t')) { a += 1; }
+    while (b > a && (s[b - 1] == ' ' || s[b - 1] == '\t' || s[b - 1] == '\r')) { b -= 1; }
+    return s[a..b];
+}
+
+// Several results, with the error last.
+fn split_kv(line str) (str, str, error) {
+    for (i in 0..line.len) {
+        if (line[i] == '=') {
+            return trim(line[0..i]), trim(line[i + 1..line.len]), nil;
+        }
+    }
+    return "", "", error(i"missing '=' in \"{line}\"");
+}
+
+fn apply(mut c Config, key str, value str) error {
+    if (key == "name") { c.name = value; return nil; }
+    if (key == "debug") { c.debug = value == "true"; return nil; }
+    if (key == "port" || key == "workers") {
+        let n, err = parse_int(value);
+        if (err != nil) { return err; }               // pass it up: the trace grows
+        if (key == "port") {
+            if (n > 65535) { return error(i"port {n} is out of range"); }
+            c.port = n;
+        } else {
+            c.workers = n;
+        }
+        return nil;
+    }
+    return error(i"unknown key '{key}'");
+}
+
+fn parse_config(text str) (Config, error) {
+    var c = Config { name: "app", port: 8080, workers: 1, debug: false };
+    var start i64 = 0;
+    var line_no i64 = 1;
+    for (i in 0..text.len + 1) {
+        if (i < text.len && text[i] != '\n') { continue; }
+        let line = trim(text[start..i]);
+        start = i + 1;
+        if (line.len > 0 && line[0] != '#') {
+            let key, value, err = split_kv(line);
+            if (err != nil) { return nil, error(i"line {line_no}: {err.msg}"); }
+            let aerr = apply(mut c, key, value);
+            if (aerr != nil) { return nil, error(i"line {line_no}: {aerr.msg}"); }
+        }
+        line_no += 1;
+    }
+    return c, nil;
+}
+
+fn load(path str) (Config, error) {
+    let text, err = read_file(path);
+    if (err != nil) { return nil, err; }      // `nil` is the zero Config
+    return parse_config(text);                // pass both results straight through
+}
+
+fn main() error {
+    let good = "# demo\nname = lume-server\nport = 9000\nworkers = 8\ndebug = true\n";
+    let cfg, err = parse_config(good);
+    if (err != nil) { return err; }
+    print("parsed:", cfg);
+
+    // Each bad input fails with a precise message; the values are zero, never garbage.
+    let bad = ["port = 80x", "workers 4", "port = 70000", "colour = blue"];
+    for (text in bad) {
+        let c, e = parse_config(text);
+        print(i"rejected {text}:", e, "(value:", c, ")");
+    }
+
+    // Ignoring an error is a compile error. To ignore one on purpose, bind it to `_`.
+    let _, _ = parse_int("not checked, on purpose");
+
+    // Errors from a missing file carry a return trace; returning one from main prints it.
+    if (argc() > 1) {
+        let file_cfg, ferr = load(arg(1));
+        if (ferr != nil) { return ferr; }
+        print("from file:", file_cfg);
+    }
+
+    // write a summary, checking the result
+    let werr = write_file("/tmp/lume_demo.conf", i"name = {cfg.name}\nport = {cfg.port}\n");
+    if (werr != nil) { return werr; }
+    let back, rerr = load("/tmp/lume_demo.conf");
+    if (rerr != nil) { return rerr; }
+    print("round trip:", back);
+
+    // A missing file: returning the error from main prints it with its return trace.
+    let _, missing = load("/definitely/not/here.conf");
+    return missing;
+}

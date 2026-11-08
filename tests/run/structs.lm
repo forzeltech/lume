@@ -1,0 +1,26 @@
+struct Vec2 { x f64, y f64 }
+struct Body { name str, pos Vec2, vel Vec2, tags []str }
+
+fn step(mut b Body, dt f64) {
+    b.pos.x += b.vel.x * dt;
+    b.pos.y = b.pos.y + b.vel.y * dt;
+}
+
+fn rename(mut b Body, n str) { b.name = n; }
+
+fn main() {
+    var b = Body { name: "rock", pos: Vec2 { x: 0.0, y: 0.0 }, vel: Vec2 { x: 1.0, y: 2.0 }, tags: [] };
+    for (i in 0..3) { step(mut b, 0.5); }
+    b.tags.push("heavy");
+    rename(mut b, "boulder");
+    print(b);
+    let c = b;
+    print(c.pos == Vec2 { x: 1.5, y: 3.0 }, c.name == "boulder", c == b);
+    var bodies []Body = [b, c];
+    bodies[1].name = "pebble";
+    bodies[1].pos.x = 9.0;
+    print(bodies[0].name, bodies[1].name, bodies[1].pos.x, bodies.len);
+}
+// expect: Body{name: "boulder", pos: Vec2{x: 1.5, y: 3.0}, vel: Vec2{x: 1.0, y: 2.0}, tags: ["heavy"]}
+// expect: true true true
+// expect: boulder pebble 9.0 2

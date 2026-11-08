@@ -1,0 +1,4 @@
+struct S { v i64 }
+fn bump(mut s S) { s.v += 1; }
+fn main() { var a = [S { v: 1 }]; bump(mut a[0]); }
+// error: cannot pass an array element

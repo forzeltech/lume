@@ -1,0 +1,9 @@
+extern "../fast.c" {
+    fn c_popcount(x u64) (i64);
+    fn c_strsum(s str) (i64);
+    fn c_hypot(a f64, b f64) (f64);
+}
+fn main() {
+    print(c_popcount(255), c_strsum("abc"), c_hypot(3.0, 4.0));
+}
+// expect: 8 294 5.0

@@ -1,0 +1,6 @@
+fn w() (i64) { return 1; }
+fn main() {
+    var ts []Task[i64] = [];
+    region { ts.push(spawn w()); }
+}
+// error: inner region

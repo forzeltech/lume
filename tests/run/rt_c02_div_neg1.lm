@@ -1,0 +1,10 @@
+fn main() {
+    var x i64 = 7;
+    var y i64 = -1;
+    print(x / y);
+    var a i32 = 9;
+    var b i32 = -1;
+    print(a / b);
+}
+// expect: -7
+// expect: -9

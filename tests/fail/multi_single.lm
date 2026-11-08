@@ -1,0 +1,3 @@
+fn mm() (i64, i64) { return 1, 2; }
+fn main() { let a = mm(); }
+// error: bind them all

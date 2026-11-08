@@ -1,0 +1,2 @@
+fn main() { var a = []; }
+// error: cannot infer the element type

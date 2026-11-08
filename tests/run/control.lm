@@ -1,0 +1,28 @@
+const LIMIT i64 = 20;
+const NAME = "fizz";
+fn classify(n i64) (str) {
+    if (n % 15 == 0) { return "FizzBuzz"; }
+    else if (n % 3 == 0) { return "Fizz"; }
+    else if (n % 5 == 0) { return "Buzz"; }
+    return i"{n}";
+}
+fn main() {
+    var i i64 = 1;
+    var out []str = [];
+    while (true) {
+        if (i > LIMIT) { break; }
+        out.push(classify(i));
+        i += 1;
+    }
+    print(out);
+    var found i64 = -1;
+    for (a in 1..50) {
+        for (b in a..50) {
+            if (a * b == 391) { found = a * 100 + b; break; }
+        }
+        if (found >= 0) { break; }
+    }
+    print(found, NAME);
+}
+// expect: ["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz", "16", "17", "Fizz", "19", "Buzz"]
+// expect: 1723 fizz
